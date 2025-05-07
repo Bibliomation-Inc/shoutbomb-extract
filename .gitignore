@@ -1,0 +1,6 @@
+*.conf
+*.log
+*.tsv
+*.tar.gz
+/examples/
+.VSCodeCounter/
