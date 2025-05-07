@@ -1,0 +1,54 @@
+logfile = shoutbomb_export.log
+
+# Temporary directory to store the output files during processing
+tempdir = tmp
+
+# Directory to store the output files
+archive = archive
+
+# Whether to cleanup old archive files after processing.
+# If active, the script will only keep the latest diff and full extract files.
+# The tempdir will be cleaned up regardless of this setting.
+# This is useful for testing, but should be disabled in production.
+cleanup = 1
+
+# This needs to match actor.org_unit.shortname
+# comma separated list of branch/system shortnames, case insensitive
+librarynames = BR1, BR2, BR3, BR4
+
+# Include descendants?
+# any value here is considered "yes"
+include_org_descendants = 1
+
+# Prefix for the output file(s)
+filenameprefix = consortium
+
+# SFTP Server to drop off
+ftphost = sample.com
+ftplogin = sample
+ftppass = sample
+remote_directory = /sample/sample2/sample3
+
+# only 1 email address for alwaysemail
+alwaysemail = sample@sample.org
+
+fromemail = no-reply-sample@sample.org
+erroremaillist = sample@sample.org, another2@sample.org
+successemaillist = sample@sample.org, another@sample.org
+
+# Email notification options for hourly hold extracts
+# Uncomment ONE of these options:
+
+# Option 1: Send email only on errors (default behavior)
+# hold_email_strategy = errors_only
+
+# Option 2: Send email for all hourly extracts (can generate many emails)
+# hold_email_strategy = always
+
+# Option 3: Send email only when hold count exceeds threshold
+# hold_email_strategy = threshold
+# hold_email_threshold = 10
+
+# Option 4: Send a daily summary instead of hourly emails
+# hold_email_strategy = daily_summary
+# hold_email_summary_hour = 20  # Hour of day (24-hour format) to send summary
