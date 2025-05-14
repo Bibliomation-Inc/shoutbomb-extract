@@ -32,7 +32,7 @@ use Utils qw(read_config read_cmd_args check_config check_cmd_args
             write_data_to_file cleanup_temp_directory cleanup_archive_files);
 use DBUtils qw(get_dbh get_db_config create_history_table get_org_units 
               get_last_run_time set_last_run_time extract_data);
-use SFTP qw(do_sftp_upload);
+use FTPES qw(do_ftpes_upload);  # Changed from SFTP to FTPES
 use Email qw(send_email);
 
 # Capture the start time
@@ -128,28 +128,29 @@ try {
     }
     
     ###########################
-    # 8) SFTP Upload
+    # 8) FTPES Upload
     ###########################
-    my $sftp_error = '';
+    my $ftpes_error = '';
     if (!$dry_run) {
-        logmsg("INFO", "Uploading file to SFTP server: $conf->{ftphost}");
+        logmsg("INFO", "Uploading file to FTPES server: $conf->{ftphost}");
         
-        # Upload hold notices
-        $sftp_error = do_sftp_upload(
+        # Upload hold notices using FTPES
+        $ftpes_error = do_ftpes_upload(
             $conf->{ftphost},
             $conf->{ftplogin},
             $conf->{ftppass},
             $conf->{remote_directory},
-            $hold_file
+            $hold_file,
+            $conf->{ftpport} || 990  # Use configured port or default to 990
         );
         
-        if ($sftp_error) {
-            logmsg("ERROR", "SFTP upload of hold notices failed: $sftp_error");
+        if ($ftpes_error) {
+            logmsg("ERROR", "FTPES upload of hold notices failed: $ftpes_error");
         } else {
-            logmsg("INFO", "SFTP upload of hold notices successful");
+            logmsg("INFO", "FTPES upload of hold notices successful");
         }
     } else {
-        logmsg("INFO", "SFTP upload skipped (dry-run mode)");
+        logmsg("INFO", "FTPES upload skipped (dry-run mode)");
     }
     
     ###########################
@@ -160,7 +161,7 @@ try {
     my $send_email = 0;
     
     # Always send on errors regardless of strategy
-    if ($sftp_error) {
+    if ($ftpes_error) {
         $send_email = 1;
     }
     # Otherwise check the configured strategy
@@ -184,14 +185,14 @@ try {
         my $seconds = $elapsed_time % 60;
         my $formatted_time = sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
         
-        my $subject = $sftp_error 
+        my $subject = $ftpes_error 
             ? "ERROR: Shoutbomb Hold Notices Extract Failed" 
             : "Shoutbomb Hold Notices Extract Completed - $current_hour";
         
         my $body = "<h2>Shoutbomb Hold Notices Extract</h2>\n";
         
-        if ($sftp_error) {
-            $body .= "<p style='color:red'>ERROR: SFTP upload failed: $sftp_error</p>\n";
+        if ($ftpes_error) {
+            $body .= "<p style='color:red'>ERROR: FTPES upload failed: $ftpes_error</p>\n";
         } else {
             $body .= "<p style='color:green'>The extract completed successfully.</p>\n";
         }
@@ -205,7 +206,7 @@ try {
         $body .= "<li>Hold Notices: " . scalar(@$hold_data) . "</li>\n";
         $body .= "</ul>\n";
         
-        my @recipients = $sftp_error 
+        my @recipients = $ftpes_error 
             ? split(/\s*,\s*/, $conf->{erroremaillist}) 
             : split(/\s*,\s*/, $conf->{successemaillist});
         
