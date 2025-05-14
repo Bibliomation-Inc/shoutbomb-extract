@@ -62,6 +62,9 @@ sub check_config {
         die $msg;
     }
 
+    # Set default port if not specified
+    $conf->{ftpport} = 990 if (!defined $conf->{ftpport} || $conf->{ftpport} eq '');
+
     if ( !-e $conf->{"tempdir"} ) {
         my $msg = "Temp folder: " . $conf->{"tempdir"} . " does not exist.\n";
         logmsg("ERROR", $msg);

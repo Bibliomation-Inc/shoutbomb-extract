@@ -6,17 +6,21 @@ use Getopt::Long;
 use File::Spec;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use SFTP qw(do_sftp_upload);
+use FTPES qw(do_ftpes_upload);
 use Logging qw(init_logging logmsg);
 use Utils qw(read_config);
 
 # Read command line arguments
 my $file_path;
-GetOptions("file=s" => \$file_path);
+my $port = 990;  # Default FTPES port
+GetOptions(
+    "file=s" => \$file_path,
+    "port=i" => \$port
+);
 
 # Check if file path is provided
 if (!$file_path) {
-    die "Usage: $0 --file <path_to_file>\n";
+    die "Usage: $0 --file <path_to_file> [--port <port_number>]\n";
 }
 
 # Read configuration file
@@ -35,19 +39,21 @@ if (!-e $abs_file_path) {
     die "File does not exist: $abs_file_path\n";
 }
 
-# Get SFTP details from configuration
+# Get FTPES details from configuration
 my $host = $conf->{ftphost};
 my $user = $conf->{ftplogin};
 my $pass = $conf->{ftppass};
 my $remote_dir = $conf->{remote_directory};
 
-# Perform SFTP upload
-my $sftp_error = do_sftp_upload($host, $user, $pass, $remote_dir, $abs_file_path);
+logmsg("INFO", "Attempting FTPES connection to $host:$port");
 
-if ($sftp_error) {
-    logmsg("ERROR", "SFTP ERROR: $sftp_error");
-    die "SFTP ERROR: $sftp_error\n";
+# Perform FTPES upload
+my $ftpes_error = do_ftpes_upload($host, $user, $pass, $remote_dir, $abs_file_path, $port);
+
+if ($ftpes_error) {
+    logmsg("ERROR", "FTPES ERROR: $ftpes_error");
+    die "FTPES ERROR: $ftpes_error\n";
 } else {
-    logmsg("INFO", "SFTP success: Uploaded $abs_file_path to $remote_dir on $host");
-    print "SFTP success: Uploaded $abs_file_path to $remote_dir on $host\n";
+    logmsg("INFO", "FTPES success: Uploaded $abs_file_path to $remote_dir on $host");
+    print "FTPES success: Uploaded $abs_file_path to $remote_dir on $host\n";
 }

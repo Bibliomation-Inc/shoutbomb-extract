@@ -1,6 +1,6 @@
 # Evergreen Shoutbomb SMS Extract
 
-This software extracts notice data from an Evergreen server and securely transfers the output to Shoutbomb's SFTP server for SMS notification processing. It consists of three separate scripts that can be scheduled to run at different intervals to provide timely SMS notifications to library patrons.
+This software extracts notice data from an Evergreen server and securely transfers the output to Shoutbomb's FTPES server for SMS notification processing. It consists of three separate scripts that can be scheduled to run at different intervals to provide timely SMS notifications to library patrons.
 
 ![Perl](https://img.shields.io/badge/Perl-39457E?style=for-the-badge&logo=perl&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white)
@@ -11,7 +11,7 @@ This software extracts notice data from an Evergreen server and securely transfe
 - **Modular Design**: Components are divided into reusable modules for better maintainability and readability.
 - **Smart Cleanup**: Type-specific cleanup of temporary and archive files to prevent interference between scripts.
 - **Email Notifications**: Configurable email notifications on success or failure, with detailed logs.
-- **SFTP Transfer**: Secure file transfer to Shoutbomb's server.
+- **FTPES Transfer**: Secure file transfer to Shoutbomb's server over FTP with TLS/SSL.
 - **Progress Tracking**: History tables track last run times for each extract type.
 
 ## Directory Structure
@@ -24,8 +24,8 @@ This software extracts notice data from an Evergreen server and securely transfe
 📁 lib/                          # Perl modules
     ├── 🐪 DBUtils.pm            # Database utilities
     ├── 🐪 Email.pm              # Email functions
+    ├── 🐪 FTPES.pm              # FTPES transfer functions
     ├── 🐪 Logging.pm            # Logging functions
-    ├── 🐪 SFTP.pm               # SFTP transfer functions
 📁 sql/                          # SQL query files
     ├── 🗃️ notice_prefs.sql      # Patron notification preferences
     ├── 🗃️ hold_notice.sql       # Hold ready notifications
@@ -35,7 +35,7 @@ This software extracts notice data from an Evergreen server and securely transfe
     ├── 📄 .gitkeep
 📁 test/                         # Test scripts
     ├── 🐪 email_test.pl         # Test email functionality
-    ├── 🐪 sftp_test.pl          # Test SFTP functionality
+    ├── 🐪 ftpes_test.pl         # Test FTPES functionality
 🐪 extract_notice_prefs.pl       # Daily patron preferences extract
 🐪 extract_daily_notices.pl      # Daily courtesy/overdue notices
 🐪 extract_hold_notices.pl       # Hourly hold notifications
@@ -58,7 +58,7 @@ This software extracts notice data from an Evergreen server and securely transfe
 
 3. Install the required Perl modules:
     ```bash
-    cpan install DBI DBD::Pg Net::SFTP::Foreign Email::MIME Email::Sender::Simple Try::Tiny DateTime File::Spec
+    cpan install DBI DBD::Pg Net::FTPSSL Email::MIME Email::Sender::Simple Try::Tiny DateTime File::Spec
     ```
 
 4. Make the scripts executable:
@@ -109,9 +109,10 @@ Edit the `config/shoutbomb_config.conf` file to customize your setup:
 | `librarynames`              | Comma-separated list of branch shortnames to include        |
 | `include_org_descendants`   | Include child organizations of listed branches              |
 | `filenameprefix`            | Prefix for all output filenames                             |
-| `ftphost`                   | Shoutbomb SFTP server hostname                              |
-| `ftplogin`                  | SFTP username                                               |
-| `ftppass`                   | SFTP password                                               |
+| `ftphost`                   | Shoutbomb FTPES server hostname                             |
+| `ftplogin`                  | FTP username                                                |
+| `ftppass`                   | FTP password                                                |
+| `ftpport`                   | FTP port (default: 990 for FTPES)                           |
 | `remote_directory`          | Directory on Shoutbomb's server to upload files             |
 | `fromemail`                 | Email address to send notifications from                    |
 | `erroremaillist`            | Comma-separated list of addresses for error notifications   |
@@ -163,10 +164,10 @@ This approach ensures that important files remain available for troubleshooting 
 
 ## Testing Tools
 
-The package includes two utilities in the `test` directory to test the core functionality:
+The package includes utilities in the `test` directory to test the core functionality:
 
 - **test/email_test.pl**: Sends a test email to verify your email configuration
-- **test/sftp_test.pl**: Tests SFTP connectivity with the `--file` option pointing to a test file
+- **test/ftpes_test.pl**: Tests FTPES connectivity with the `--file` option pointing to a test file
 
 To run these test utilities:
 
@@ -175,12 +176,12 @@ To run these test utilities:
 cd test
 ./email_test.pl
 
-# Test SFTP functionality
+# Test FTPES functionality
 cd test
-./sftp_test.pl --file path/to/test/file
+./ftpes_test.pl --file path/to/test/file [--port 990]
 ```
 
-These test scripts use the same configuration file (`config/library_config.conf`) as the main extract scripts.
+These test scripts use the same configuration file (`config/shoutbomb_config.conf`) as the main extract scripts.
 
 ## Cron Job Setup
 
@@ -208,7 +209,7 @@ flowchart TD
     C --> D[Extract Notice Data]
     D --> E[Write to TSV Files]
     E --> F[Archive Files]
-    F --> G[Upload to SFTP]
+    F --> G[Upload via FTPES]
     G --> H[Send Email Notification]
     H --> I[Clean Up Files by Type]
     I --> J[Update History Table]
@@ -218,7 +219,7 @@ flowchart TD
 ## Troubleshooting
 
 - **Check Logs**: The logfile specified in your config contains detailed information about each run
-- **Test Connections**: Use the `email_test.pl` and `sftp_test.pl` scripts to verify connectivity
+- **Test Connections**: Use the `email_test.pl` and `ftpes_test.pl` scripts to verify connectivity
 - **Run with Debug**: Add the `--debug` flag to get verbose output
 - **Test Without Network**: Use `--dry-run` to test data extraction without network operations
 - **Check Archive Directory**: Recent files are kept in the archive directory for manual verification

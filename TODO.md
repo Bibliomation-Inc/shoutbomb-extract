@@ -13,3 +13,5 @@
 - [x] Don't include data for overdue notices in the `daily_notices` extract. We decided to remove this from the extract and stick with hold notices and preoverdue notices.
 - [x] Simplify strategy for getting item titles.
 - [x] Remove diff overlap feature from scripts and config. It was necessary for Library IQ, but not for Shoutbomb.
+- [ ] Change hold notice org unit filter to filter by pickup library instead of `ahr.current_shelf_lib`.
+- [ ] Consider strategy for filtering by library. There may be an issue when the trial period ends and we need to filter by library. 

@@ -23,10 +23,11 @@ include_org_descendants = 1
 # Prefix for the output file(s)
 filenameprefix = consortium
 
-# SFTP Server to drop off
+# FTPES Server details
 ftphost = sample.com
 ftplogin = sample
 ftppass = sample
+ftpport = 990  # Default port for FTPES is 990
 remote_directory = /sample/sample2/sample3
 
 # only 1 email address for alwaysemail
