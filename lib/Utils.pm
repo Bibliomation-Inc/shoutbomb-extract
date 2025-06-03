@@ -9,6 +9,7 @@ use Logging qw(logmsg);
 use Archive::Tar;
 use DateTime;
 use Getopt::Long;
+use Text::CSV;
 
 our @EXPORT_OK = qw(read_config read_cmd_args check_config check_cmd_args 
                    create_tar_gz dedupe_array write_data_to_file
@@ -196,7 +197,6 @@ sub cleanup_archive_files {
 # ----------------------------------------------------------
 # write_data_to_file - Write data to a file
 # ----------------------------------------------------------
-# Modified version of the existing function to include extract type prefix
 sub write_data_to_file {
     my ($type, $data, $columns, $tempdir) = @_;
 
@@ -212,8 +212,20 @@ sub write_data_to_file {
         $extract_type = 'hold';
     }
 
-    # Define the output file path
-    my $out_file = File::Spec->catfile($tempdir, "$type.tsv");
+    # Define the output file path - changed from .csv to .txt for pipe-delimited files
+    my $out_file = File::Spec->catfile($tempdir, "$type.txt");
+
+    # Create a new CSV object with pipe delimiter
+    my $csv = Text::CSV->new({
+        binary           => 1,
+        always_quote     => 0,    # Don't quote all fields by default
+        eol              => "\n", # Use Unix-style line endings
+        quote_space      => 0,    # Don't automatically quote spaces
+        auto_diag        => 1,    # Report errors
+        quote_char       => '"',  # Use double quotes when needed
+        escape_char      => '"',  # Escape quotes with quotes
+        sep_char         => '|',  # Use pipe as delimiter
+    });
 
     # Open the output file for writing
     my $error = "Cannot open $out_file: $!";
@@ -223,17 +235,31 @@ sub write_data_to_file {
     };
 
     # Write the column headers to the output file
-    print $OUT join("\t", @$columns)."\n";
+    $csv->print($OUT, $columns);
 
     # Write each row of data to the output file
     foreach my $r (@$data) {
-        # Sanitize each field to replace line breaks with spaces
-        my @sanitized_row = map { 
-            my $val = $_ // ''; 
-            $val =~ s/[\r\n]+/ /g; 
-            $val 
-        } @$r;
-        print $OUT Encode::encode('UTF-8', join("\t", @sanitized_row) . "\n");
+        # Sanitize each field and prepare for output
+        my @sanitized_row;
+        
+        for (my $i = 0; $i < scalar(@$r); $i++) {
+            my $val = $r->[$i] // '';
+            
+            # Remove line breaks
+            $val =~ s/[\r\n]+/ /g;
+            
+            # Handle date fields - strip time component if present
+            if ($val =~ /^\d{4}-\d{2}-\d{2}[T\s]/) {
+                $val =~ s/^(\d{4}-\d{2}-\d{2})[T\s].*$/$1/;
+            }
+            
+            # Escape pipe characters in the data to prevent delimiter confusion
+            $val =~ s/\|/\\|/g;
+            
+            push @sanitized_row, $val;
+        }
+        
+        $csv->print($OUT, \@sanitized_row);
     }
 
     # Close the output file

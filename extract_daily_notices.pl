@@ -30,7 +30,7 @@ use Utils qw(read_config read_cmd_args check_config check_cmd_args
             write_data_to_file cleanup_temp_directory cleanup_archive_files);
 use DBUtils qw(get_dbh get_db_config create_history_table get_org_units 
                get_last_run_time set_last_run_time extract_data);
-use FTPES qw(do_ftpes_upload);  # Changed from SFTP to FTPES
+use SFTP qw(do_sftp_upload);  # Changed from FTPES to SFTP
 use Email qw(send_email);
 
 # Capture the start time
@@ -127,35 +127,38 @@ try {
     }
     
     ###########################
-    # 8) FTPES Upload
+    # 8) SFTP Upload
     ###########################
-    my $ftpes_error = '';
+    my $sftp_error = '';
     if (!$dry_run) {
-        logmsg("INFO", "Uploading file to FTPES server: $conf->{ftphost}");
+        logmsg("INFO", "Uploading file to SFTP server: $conf->{ftphost}");
         
-        # Upload courtesy notices using FTPES
-        $ftpes_error = do_ftpes_upload(
+        # Use the direct path for courtesy notices (/Renew/)
+        my $remote_path = '/Renew';
+        
+        # Upload courtesy notices using SFTP
+        $sftp_error = do_sftp_upload(
             $conf->{ftphost},
             $conf->{ftplogin},
             $conf->{ftppass},
-            $conf->{remote_directory},
+            $remote_path,
             $courtesy_file,
-            $conf->{ftpport} || 990  # Use configured port or default to 990
+            $debug
         );
         
-        if ($ftpes_error) {
-            logmsg("ERROR", "FTPES upload of courtesy notices failed: $ftpes_error");
+        if ($sftp_error) {
+            logmsg("ERROR", "SFTP upload of courtesy notices failed: $sftp_error");
         } else {
-            logmsg("INFO", "FTPES upload of courtesy notices successful");
+            logmsg("INFO", "SFTP upload of courtesy notices successful to $remote_path");
         }
     } else {
-        logmsg("INFO", "FTPES upload skipped (dry-run mode)");
+        logmsg("INFO", "SFTP upload skipped (dry-run mode)");
     }
     
     ###########################
     # 9) Email Notification
     ###########################
-    if (!$dry_run || $ftpes_error) {
+    if (!$dry_run || $sftp_error) {
         # Calculate the elapsed time
         my $elapsed_time = tv_interval($start_time);
         my $hours = int($elapsed_time / 3600);
@@ -163,7 +166,7 @@ try {
         my $seconds = $elapsed_time % 60;
         my $formatted_time = sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
         
-        my $subject = $ftpes_error 
+        my $subject = $sftp_error 
             ? "ERROR: Shoutbomb Daily Notices Extract Failed" 
             : "SUCCESS: Shoutbomb Daily Notices Extract Completed";
         
@@ -171,9 +174,9 @@ try {
         
         if ($dry_run) {
             $subject = "[DRY RUN] " . $subject;
-            $body .= "<p style='color:blue'><strong>DRY RUN MODE</strong> - No files were uploaded to FTPES server</p>\n";
-        } elsif ($ftpes_error) {
-            $body .= "<p style='color:red'>ERROR: FTPES upload failed: $ftpes_error</p>\n";
+            $body .= "<p style='color:blue'><strong>DRY RUN MODE</strong> - No files were uploaded to SFTP server</p>\n";
+        } elsif ($sftp_error) {
+            $body .= "<p style='color:red'>ERROR: SFTP upload failed: $sftp_error</p>\n";
         } else {
             $body .= "<p style='color:green'>The extract completed successfully.</p>\n";
         }
@@ -186,7 +189,7 @@ try {
         $body .= "<li>Courtesy Notices: " . scalar(@$courtesy_data) . "</li>\n";
         $body .= "</ul>\n";
         
-        my @recipients = $ftpes_error 
+        my @recipients = $sftp_error 
             ? split(/\s*,\s*/, $conf->{erroremaillist}) 
             : split(/\s*,\s*/, $conf->{successemaillist});
         

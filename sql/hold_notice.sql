@@ -1,10 +1,10 @@
 SELECT
     rmat.title AS "TITLE",
-    ahr.shelf_time AS "HOLD AVAILABLE DATE",
+    ahr.shelf_time::date AS "HOLD AVAILABLE DATE",
     acp.barcode AS "ITEM BARCODE",
     ac.barcode AS "PATRON BARCODE",
     aou.shortname AS "PICKUP LOCATION",
-    ahr.shelf_expire_time AS "HOLD PICKUP DATE"
+    ahr.shelf_expire_time::date AS "HOLD PICKUP DATE"
 FROM
     action.hold_request ahr
     JOIN asset.copy acp ON ahr.current_copy = acp.id
