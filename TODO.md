@@ -15,3 +15,4 @@
 - [x] Remove diff overlap feature from scripts and config. It was necessary for Library IQ, but not for Shoutbomb.
 - [ ] Change hold notice org unit filter to filter by pickup library instead of `ahr.current_shelf_lib`.
 - [ ] Consider strategy for filtering by library. There may be an issue when the trial period ends and we need to filter by library. 
+- [ ] Add a status to the history table indicating whether the extract was successful or not. This will help with debugging and tracking issues.

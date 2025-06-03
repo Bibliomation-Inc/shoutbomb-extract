@@ -215,7 +215,24 @@ sub extract_data {
     my @columns = @{$sth->{NAME}};
     
     while (my $row = $sth->fetchrow_arrayref) {
-        push @results, [@$row];
+        # Create a modified row with proper formatting
+        my @formatted_row = @$row;
+        
+        # Format date fields - this will be complemented by the write_data_to_file function
+        for (my $i = 0; $i < scalar(@formatted_row); $i++) {
+            # Skip undefined values
+            next unless defined $formatted_row[$i];
+            
+            # Special handling for date fields in column names
+            if ($columns[$i] =~ /DATE|TIME|AVAILABLE|PICKUP|DUE/i) {
+                # Format timestamps to just date if needed
+                if ($formatted_row[$i] =~ /^\d{4}-\d{2}-\d{2}[T\s]/) {
+                    $formatted_row[$i] =~ s/^(\d{4}-\d{2}-\d{2})[T\s].*$/$1/;
+                }
+            }
+        }
+        
+        push @results, \@formatted_row;
     }
     
     $sth->finish;
