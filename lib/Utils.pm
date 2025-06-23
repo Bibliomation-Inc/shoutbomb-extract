@@ -116,7 +116,7 @@ sub cleanup_temp_directory {
     my ($temp_dir, $extract_type) = @_;
     
     # Create a type-specific subdirectory pattern if extract_type is provided
-    my $file_pattern = $extract_type ? qr/${extract_type}.*\.tsv$/ : qr/\.tsv$/;
+    my $file_pattern = $extract_type ? qr/${extract_type}.*\.txt$/ : qr/\.txt$/;
     
     opendir(my $dh, $temp_dir) or do {
         logmsg("ERROR", "Cannot open temp directory $temp_dir: $!");
@@ -146,52 +146,40 @@ sub cleanup_archive_files {
     };
     
     # Filter files that match our prefix and extract type
-    my $file_pattern = qr/^${prefix}_${extract_type}.*\.tsv$/;
+    my $file_pattern = qr/^${prefix}_${extract_type}/;
     my @files = grep { -f "$archive_dir/$_" && $_ =~ $file_pattern } readdir($dh);
     closedir($dh);
     
-    # Group files by date
-    my %files_by_date;
-    foreach my $file (@files) {
-        if ($file =~ /_(\d{4}-\d{2}-\d{2})/) {
-            my $date = $1;
-            push @{$files_by_date{$date}}, $file;
-        } elsif ($file =~ /_(\d{4}-\d{2}-\d{2}_\d{4})/) { 
-            # For hourly files with timestamps like 2023-05-01_1430
-            my $date = $1;
-            push @{$files_by_date{$date}}, $file;
-        }
-    }
+    logmsg("DEBUG", "Found " . scalar(@files) . " $extract_type files to process for cleanup");
     
-    # Sort dates and keep only files from the most recent date
-    my @sorted_dates = sort keys %files_by_date;
-    if (@sorted_dates > 1) {
-        my $latest_date = $sorted_dates[-1];
+    if ($extract_type eq 'hold') {
+        # For hold notices - keep only the 3 most recent files regardless of date
+        my @sorted_files = sort @files;
         
-        # Delete files from older dates
-        foreach my $date (@sorted_dates[0..($#sorted_dates-1)]) {
-            foreach my $old_file (@{$files_by_date{$date}}) {
+        # If we have more than 3 files, delete the oldest ones
+        if (@sorted_files > 3) {
+            my @files_to_remove = @sorted_files[0..($#sorted_files-3)];
+            foreach my $old_file (@files_to_remove) {
                 unlink("$archive_dir/$old_file") or logmsg("WARNING", "Could not delete $archive_dir/$old_file: $!");
-                logmsg("INFO", "Deleted old archive file: $old_file");
+                logmsg("INFO", "Deleted older hold archive file: $old_file");
             }
+            logmsg("INFO", "Kept 3 most recent hold notice files, deleted " . scalar(@files_to_remove) . " older files");
         }
+    } 
+    else {
+        # For other notice types (courtesy, notice_prefs) - keep only the most recent file
+        my @sorted_files = sort @files;
         
-        # For hourly files (like hold notices), keep only the most recent few within the latest date
-        if ($extract_type eq 'hold') {
-            my @hourly_files = sort @{$files_by_date{$latest_date}};
-            # Keep only the 3 most recent hourly files
-            my $keep_count = 3;
-            if (@hourly_files > $keep_count) {
-                my @files_to_remove = @hourly_files[0..($#hourly_files-$keep_count)];
-                foreach my $old_file (@files_to_remove) {
-                    unlink("$archive_dir/$old_file") or logmsg("WARNING", "Could not delete $archive_dir/$old_file: $!");
-                    logmsg("INFO", "Deleted older hourly archive file: $old_file");
-                }
+        # If we have more than 1 file, delete all but the most recent
+        if (@sorted_files > 1) {
+            my @files_to_remove = @sorted_files[0..($#sorted_files-1)];
+            foreach my $old_file (@files_to_remove) {
+                unlink("$archive_dir/$old_file") or logmsg("WARNING", "Could not delete $archive_dir/$old_file: $!");
+                logmsg("INFO", "Deleted older $extract_type archive file: $old_file");
             }
+            logmsg("INFO", "Kept most recent $extract_type notice file, deleted " . scalar(@files_to_remove) . " older files");
         }
     }
-    
-    logmsg("INFO", "Cleaned up archive directory for $extract_type files");
 }
 
 # ----------------------------------------------------------
