@@ -47,6 +47,5 @@ WHERE
         )
         AND au.deleted = false
     )
-    AND circ.circ_lib IN ($$ORG_UNIT_FILTER$$)
 ORDER BY
     circ.due_date ASC;

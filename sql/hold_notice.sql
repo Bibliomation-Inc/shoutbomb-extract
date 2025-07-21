@@ -9,8 +9,7 @@ FROM
     action.hold_request ahr
     JOIN asset.copy acp ON ahr.current_copy = acp.id
     JOIN asset.call_number acn ON acp.call_number = acn.id
-    JOIN biblio.record_entry bre ON ahr.target = bre.id
-    JOIN reporter.materialized_simple_record rmat ON bre.id = rmat.id
+    JOIN reporter.materialized_simple_record rmat ON acn.record = rmat.id
     JOIN actor.usr au ON ahr.usr = au.id
     JOIN actor.card ac ON au.card = ac.id
     JOIN actor.org_unit aou ON ahr.pickup_lib = aou.id
@@ -35,6 +34,5 @@ WHERE
         )
         AND au.deleted = false
     )
-    AND ahr.current_shelf_lib IN ($$ORG_UNIT_FILTER$$)
 ORDER BY
     ahr.shelf_time;
