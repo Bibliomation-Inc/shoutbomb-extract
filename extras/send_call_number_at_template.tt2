@@ -1,0 +1,27 @@
+[%- USE date -%]
+[%- sms_number = user_data.sms_notify -%]
+[%- sanitized_sms = sms_number.replace('[-\s()]', '', 'g') -%]
+To: [%- params.recipient_email %]
+Bcc: [%- params.bcc_email || '' %]
+From: [%- params.sender_email %]
+Date: [%- date.format(date.now, '%a, %d %b %Y %T -0000', gmt => 1) %]
+Subject: CALLNO+[% sanitized_sms %]
+Auto-Submitted: auto-generated
+
+[%-
+  bibxml = helpers.xml_doc( target.record.marc );
+  title = "";
+  FOR part IN bibxml.findnodes('//*[@tag="245"]/*[@code="a" or @code="b"]');
+    title = title _ part.textContent;
+  END;
+  author = bibxml.findnodes('//*[@tag="100"]/*[@code="a"]').textContent;
+%]
+Call Number: [% target.label %]
+Location: [% helpers.get_most_populous_location( target.id ).name %]
+Library: [% target.owning_lib.name %]
+[%- IF title %]
+Title: [% title %]
+[%- END %]
+[%- IF author %]
+Author: [% author %]
+[%- END %]
