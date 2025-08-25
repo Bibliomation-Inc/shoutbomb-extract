@@ -11,10 +11,9 @@ SELECT
      WHERE ahr.target = bre.id
      AND ahr.fulfillment_time IS NULL
      AND ahr.cancel_time IS NULL) AS "HOLD_COUNT",
-    (SELECT COUNT(*) 
-     FROM action.circulation child_circ 
-     WHERE child_circ.parent_circ = circ.id)::integer AS "TIMES_RENEWED",
-    circ.renewal_remaining::integer AS "MAX_RENEWAL"
+    'Field not in use. See RENEWAL_REMAINING.' AS "TIMES_RENEWED",
+    'Field not in use. See RENEWAL_REMAINING.' AS "MAX_RENEWAL",
+    circ.renewal_remaining::integer AS "RENEWAL_REMAINING"
 FROM
     action.circulation circ
 JOIN 

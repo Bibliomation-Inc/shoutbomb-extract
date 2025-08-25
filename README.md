@@ -135,6 +135,49 @@ Available strategies for `hold_email_strategy`:
 - `threshold`: Send emails only when hold count exceeds the threshold value
 - `daily_summary`: Send one summary email per day at the specified hour
 
+### Action Trigger Configuration for Shoutbomb SMS
+
+This repository includes templates that allow you to send SMS notifications through Shoutbomb using Evergreen's action trigger system. Two key features are supported:
+
+1. **Test SMS Feature**: Confirms a patron's mobile number is correctly registered
+2. **Call Number Notifications**: Sends a call number and item details via SMS
+
+Follow these steps to set up the action triggers:
+
+#### Step 1: Copy Existing Triggers
+
+First, duplicate the existing triggers to create new versions:
+
+1. Navigate to **Admin → Local Administration → Notifications/Action Triggers**
+2. Find the existing SMS test and call number triggers
+3. For each, click **Clone** to create copies
+4. Give the new triggers descriptive names (e.g., "Shoutbomb Test SMS" and "Shoutbomb Call Number SMS")
+
+#### Step 2: Configure New Triggers
+
+1. Edit each new trigger
+2. Go to the **Edit Definition** tab
+3. Copy the content from the template files in this repository:
+   - For Test SMS: `extras/test_sms_at_template.tt2`
+   - For Call Number: `extras/send_call_number_at_template.tt2`
+4. Paste the content into the corresponding template field
+5. While still in the **Edit Definition** tab, scroll down to the **Reactor** section, change the reactor to `SendEmail` (this sends the message to Shoutbomb via email)
+6. Click **Save**
+7. Go to the **Edit Parameters** tab
+8. Add or modify these parameters:
+   - `sender_email`: Email address that will send notifications to Shoutbomb
+   - `recipient_email`: Shoutbomb's gateway email address (provided by Shoutbomb)
+   - `bcc_email` (optional): Address to receive copies of messages. Useful for debugging or monitoring.
+9. Click **Save**
+
+Example parameters:
+
+```
+sender_email: your-email@example.com
+recipient_email: 1234567890@shoutbomb.com
+bcc_email: optional-bcc@example.com
+```
+
 ## Command Line Options
 
 All scripts support these common options:

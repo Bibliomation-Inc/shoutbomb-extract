@@ -1,0 +1,13 @@
+[%- USE date -%]
+[%- user = target -%]
+[%- lib = user.home_ou -%]
+[%- sms_number = helpers.get_user_setting(target.id, 'opac.default_sms_notify') -%]
+[%- sanitized_sms = sms_number.replace('[-\s()]', '', 'g') -%]
+To: [%- params.recipient_email %]
+Bcc: [%- params.bcc_email || '' %]
+From: [%- params.sender_email %]
+Date: [%- date.format(date.now, '%a, %d %b %Y %T -0000', gmt => 1) %]
+Subject: EGTEST+[% sanitized_sms %]
+Auto-Submitted: auto-generated
+
+This is a test confirming your mobile number for [% lib.name %] is correct.
