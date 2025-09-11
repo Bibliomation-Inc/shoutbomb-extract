@@ -14,6 +14,10 @@ This software extracts notice data from an Evergreen server and securely transfe
 - **SFTP Transfer**: Secure file transfer to Shoutbomb's server over SSH File Transfer Protocol.
 - **Progress Tracking**: History tables track last run times for each extract type.
 
+## Documentation
+
+- Renewal eligibility: see [docs/renewal-eligibility.md](docs/renewal-eligibility.md) for a detailed explanation of how the courtesy notice SQL determines renewal eligibility.
+
 ## Directory Structure
 
 ```bash
