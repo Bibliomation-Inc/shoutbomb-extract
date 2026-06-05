@@ -11,7 +11,9 @@ This directory contains Evergreen action trigger templates for sending selected 
 | Send Call Number | `send_call_number_at_template.tt2` | Available for action trigger setup |
 | Courtesy Notice | `courtesy_at_template.tt2` | Not currently in use; WIP/informational |
 
-The Hold Ready Notice template is currently used in production at Bibliomation. It restores staff visibility into patron notification history because Evergreen records the action trigger event. Staff can confirm when patrons were notified from the hold shelf or from the patron's triggered events log.
+The Hold Ready Notice template is currently used in production at Bibliomation. It is intended to replace the hold notice extract strategy for patron hold-ready SMS notifications. Bibliomation currently still runs the hold notice extracts twice daily for verification.
+
+This action trigger approach restores staff visibility into patron notification history because Evergreen records the action trigger event. Staff can confirm when patrons were notified from the hold shelf or from the patron's triggered events log.
 
 The Courtesy Notice template is not currently in use at Bibliomation. Treat its documentation and configuration details as provisional.
 
@@ -67,7 +69,7 @@ File: `hold_ready_at_template.tt2`
 
 The Hold Ready Notice template sends hold-ready data to Shoutbomb using a `HOLDRDY+` subject line. The template batches one or more available holds for the same patron and includes the title, hold shelf date, copy barcode, patron barcode, pickup library shortname, and shelf expiration date.
 
-Because this template runs through Evergreen action triggers, the notification is visible in Evergreen's triggered events history. This is the production path at Bibliomation for hold-ready SMS notifications.
+Because this template runs through Evergreen action triggers, the notification is visible in Evergreen's triggered events history. This is the production path at Bibliomation for hold-ready SMS notifications and is intended to replace the extract-based hold notification workflow. Bibliomation currently keeps the hold notice extracts running twice daily as a verification check.
 
 ### Hold Ready Requirements
 

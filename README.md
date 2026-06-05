@@ -153,7 +153,7 @@ Available strategies for `hold_email_strategy`:
 
 This repository includes Evergreen action trigger templates that send SMS-related messages to Shoutbomb through Shoutbomb's email gateway. The detailed setup instructions live in [extras/README.md](extras/README.md) with the template files.
 
-The Hold Ready Notice template is currently used in production at Bibliomation. Because it sends the notification through Evergreen's action trigger system, library staff can confirm when patrons were notified from the hold shelf or from the patron's triggered events log.
+The Hold Ready Notice template is currently used in production at Bibliomation and is intended to replace the extract-based hold notice workflow. Bibliomation currently still runs the hold notice extracts twice daily for verification. Because the action trigger sends the notification through Evergreen's action trigger system, library staff can confirm when patrons were notified from the hold shelf or from the patron's triggered events log.
 
 The Courtesy Notice action trigger template is not currently in use at Bibliomation and should be treated as WIP/informational documentation.
 
